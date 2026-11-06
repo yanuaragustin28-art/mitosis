@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mitosis Master - Game Biologi Interaktif</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+        }
+
+        .font-game {
+            font-family: 'Fredoka', cursive, sans-serif;
+        }
+
+        /* Animated subtle background */
+        .bio-bg {
+            background-color: #0d1322;
+            background-image: 
+                radial-gradient(circle at 15% 25%, rgba(59, 130, 246, 0.15) 0%, transparent 45%),
+                radial-gradient(circle at 85% 75%, rgba(168, 85, 247, 0.15) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.08) 0%, transparent 50%);
+        }
+
+        /* Pulse effects */
+        @keyframes softPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        .soft-pulse {
+            animation: softPulse 3s ease-in-out infinite;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bio-bg text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden">
+
+    <!-- Top Navigation Header -->
+    <header class="w-full bg-slate-900/80 backdrop-blur-md border-b border-slate-800 px-4 py-3 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                    <i data-lucide="dna" class="w-6 h-6 text-slate-950 font-bold"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold font-game tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400">
+                        MITOSIS MASTER
+                    </h1>
+                    <p class="text-xs text-slate-400 font-medium">Laboratorium Sel & Pembelahan Mitosis</p>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="flex items-center gap-4">
+                <div class="bg-slate-800/90 border border-slate-700/60 rounded-xl px-3 py-1.5 flex items-center gap-2 text-sm shadow-inner">
+                    <span class="text-amber-400">⭐</span>
+                    <span class="text-xs text-slate-400 font-medium hidden sm:inline">Skor:</span>
+                    <span id="playerScore" class="font-bold text-amber-300 font-game text-base">0</span>
+                </div>
+                <button onclick="toggleAudio()" id="soundToggleBtn" class="p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-cyan-400 hover:border-cyan-500/50 transition" title="Toggle Suara">
+                    <i data-lucide="volume-2" id="soundIcon" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-6xl w-full mx-auto p-4 md:p-6 flex flex-col items-center">
+        
+        <!-- Tab Navigation Buttons -->
+        <div class="w-full max-w-2xl bg-slate-900/70 p-1.5 rounded-2xl border border-slate-800 flex gap-1 mb-6 shadow-xl">
+            <button onclick="switchTab('lab')" id="tabBtn-lab" class="tab-btn flex-1 py-2.5 px-3 rounded-xl font-medium text-sm transition flex items-center justify-center gap-2 bg-cyan-600 text-white shadow-md">
+                <i data-lucide="microscope" class="w-4 h-4"></i>
+                <span>1. Lab Interaktif</span>
+            </button>
+            <button onclick="switchTab('sort')" id="tabBtn-sort" class="tab-btn flex-1 py-2.5 px-3 rounded-xl font-medium text-sm transition flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200">
+                <i data-lucide="arrow-right-left" class="w-4 h-4"></i>
+                <span>2. Urutan Fase</span>
+            </button>
+            <button onclick="switchTab('quiz')" id="tabBtn-quiz" class="tab-btn flex-1 py-2.5 px-3 rounded-xl font-medium text-sm transition flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200">
+                <i data-lucide="help-circle" class="w-4 h-4"></i>
+                <span>3. Tantangan Kuis</span>
+            </button>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- VIEW 1: LAB INTERAKTIF (Eksplorasi Tahapan) -->
+        <!-- ============================================== -->
+        <section id="view-lab" class="tab-view w-full max-w-4xl flex flex-col items-center">
+            <div class="text-center mb-4">
+                <span class="inline-block px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold rounded-full uppercase tracking-wider mb-2">
+                    Eksplorasi Visual
+                </span>
+                <h2 class="text-2xl font-bold font-game text-slate-100">Simulasi 5 Tahapan Mitosis</h2>
+                <p class="text-sm text-slate-400 max-w-lg mx-auto">
+                    Klik tombol tahapan di bawah untuk melihat gerakan kromosom, sentriol, dan dinding membran sel.
+                </p>
+            </div>
+
+            <!-- Stage Selector Buttons -->
+            <div class="flex flex-wrap justify-center gap-2 mb-6">
+                <button onclick="selectLabStage(0)" class="stage-btn px-4 py-2 rounded-xl text-sm font-semibold border transition active:scale-95 bg-cyan-600 text-white border-cyan-400 shadow-lg shadow-cyan-600/30" data-idx="0">Profase</button>
+                <button onclick="selectLabStage(1)" class="stage-btn px-4 py-2 rounded-xl text-sm font-semibold border transition active:scale-95 bg-slate-800 text-slate-300 border-slate-700 hover:border-slate-500" data-idx="1">Metafase</button>
+                <button onclick="selectLabStage(2)" class="stage-btn px-4 py-2 rounded-xl text-sm font-semibold border transition active:scale-95 bg-slate-800 text-slate-300 border-slate-700 hover:border-slate-500" data-idx="2">Anafase</button>
+                <button onclick="selectLabStage(3)" class="stage-btn px-4 py-2 rounded-xl text-sm font-semibold border transition active:scale-95 bg-slate-800 text-slate-300 border-slate-700 hover:border-slate-500" data-idx="3">Telofase</button>
+                <button onclick="selectLabStage(4)" class="stage-btn px-4 py-2 rounded-xl text-sm font-semibold border transition active:scale-95 bg-slate-800 text-slate-300 border-slate-700 hover:border-slate-500" data-idx="4">Sitokinesis</button>
+            </div>
+
+            <!-- Cell Visualizer Area -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 w-full items-stretch">
+                <!-- Canvas Container -->
+                <div class="md:col-span-7 bg-slate-900/90 border border-slate-800 rounded-3xl p-4 flex flex-col items-center justify-center relative overflow-hidden shadow-2xl">
+                    <div class="absolute top-3 left-4 text-xs font-mono text-cyan-400/80 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                        SIMULATOR MIKROSKOP ELEKTRON
+                    </div>
+                    <canvas id="cellCanvas" width="460" height="340" class="w-full max-w-[440px] h-[320px] rounded-2xl cursor-pointer"></canvas>
+                    <div class="text-[11px] text-slate-500 mt-2 italic flex items-center gap-1">
+                        <i data-lucide="info" class="w-3.5 h-3.5"></i>
+                        Arahkan mouse atau sentuh kanvas sel untuk melihat reaksi partikel sitoplasma
+                    </div>
+                </div>
+
+                <!-- Stage Explanation Card -->
+                <div class="md:col-span-5 bg-gradient-to-br from-slate-900/95 to-slate-950/95 border border-slate-800 rounded-3xl p-5 flex flex-col justify-between shadow-2xl">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span id="labBadge" class="px-2.5 py-1 bg-cyan-500/20 text-cyan-300 text-xs font-bold rounded-lg border border-cyan-500/30">TAHAP 1 DARI 5</span>
+                            <span id="labMnemonic" class="text-xs font-bold font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">Tips: P-M-A-T</span>
+                        </div>
+                        <h3 id="labTitle" class="text-2xl font-bold font-game text-white mb-2">Profase</h3>
+                        <p id="labDesc" class="text-slate-300 text-sm leading-relaxed mb-4">
+                            Kromatin mulai memadat menjadi kromosom ganda. Membran inti sel (nukleus) mulai terurai dan hilang. Sentrosom mulai bergerak menuju kutub berlawanan sambil membentuk benang gelendong (spindel).
+                        </p>
+                        
+                        <div class="bg-slate-800/60 rounded-2xl p-3 border border-slate-700/50 space-y-2 mb-4">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                                <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Ciri Kunci:
+                            </h4>
+                            <ul id="labKeyPoints" class="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
+                                <li>Kromosom terlihat jelas memendek & menebal</li>
+                                <li>Membran inti melebur / menghilang</li>
+                                <li>Sentriol membentuk benang spindel</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 pt-2">
+                        <button onclick="stepLabStage(-1)" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white transition flex-1 flex justify-center items-center gap-1 text-xs font-semibold">
+                            <i data-lucide="chevron-left" class="w-4 h-4"></i> Sebelumnya
+                        </button>
+                        <button onclick="stepLabStage(1)" class="p-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white transition flex-1 flex justify-center items-center gap-1 text-xs font-semibold shadow-lg shadow-cyan-600/30">
+                            Selanjutnya <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- VIEW 2: URUTKAN FASE (Puzzle Timeline Game) -->
+        <!-- ============================================== -->
+        <section id="view-sort" class="tab-view w-full max-w-4xl hidden flex-col items-center">
+            <div class="text-center mb-6">
+                <span class="inline-block px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold rounded-full uppercase tracking-wider mb-2">
+                    Mini-Game Puzzle
+                </span>
+                <h2 class="text-2xl font-bold font-game text-slate-100">Susun Urutan Pembelahan Sel</h2>
+                <p class="text-sm text-slate-400 max-w-lg mx-auto">
+                    Klik kartu secara berurutan dari tahap awal hingga akhir pembelahan sel (Ingat jembatan keledai: <b>P - M - A - T</b>).
+                </p>
+            </div>
+
+            <!-- Puzzle Target Slots -->
+            <div class="w-full bg-slate-900/80 border border-slate-800 rounded-3xl p-5 mb-6">
+                <div class="flex items-center justify-between mb-3 text-xs text-slate-400 font-semibold uppercase tracking-wider">
+                    <span>Urutan Kronologis Target</span>
+                    <button onclick="resetSortGame()" class="text-cyan-400 hover:underline flex items-center gap-1 font-normal text-xs">
+                        <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Acak Ulang
+                    </button>
+                </div>
+
+                <div id="slotsContainer" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <!-- Dynamic Slots generated via JS -->
+                </div>
+            </div>
+
+            <!-- Pool of Cards to Pick -->
+            <div class="w-full">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 text-center">Pilihan Kartu Tahapan (Klik untuk menempatkan):</h4>
+                <div id="cardsPool" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <!-- Cards will be rendered by JS -->
+                </div>
+            </div>
+
+            <!-- Success Notification Card -->
+            <div id="sortSuccessBox" class="w-full mt-6 bg-emerald-950/80 border-2 border-emerald-500/60 rounded-2xl p-4 hidden flex-col items-center text-center animate-bounce">
+                <div class="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 mb-2">
+                    <i data-lucide="trophy" class="w-7 h-7"></i>
+                </div>
+                <h3 class="text-lg font-bold text-emerald-300 font-game">Luar Biasa! Urutan Kamu Benar!</h3>
+                <p class="text-xs text-emerald-200/90 mb-3">Kamu berhasil menghafal kronologi siklus pembelahan sel dengan sempurna (+100 Poin)!</p>
+                <button onclick="switchTab('quiz')" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm shadow-lg transition">
+                    Lanjut ke Tantangan Kuis ➜
+                </button>
+            </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- VIEW 3: TANTANGAN KUIS BIOLOGI (Quiz Arena) -->
+        <!-- ============================================== -->
+        <section id="view-quiz" class="tab-view w-full max-w-2xl hidden flex-col items-center">
+            <div class="text-center mb-6">
+                <span class="inline-block px-3 py-1 bg-purple-500/10 border border-purple-500/30 text-purple-400 text-xs font-semibold rounded-full uppercase tracking-wider mb-2">
+                    Uji Pemahaman
+                </span>
+                <h2 class="text-2xl font-bold font-game text-slate-100">Tantangan Cerdas Mitosis</h2>
+                <p class="text-sm text-slate-400">Jawab pertanyaan berikut untuk mengumpulkan poin dan menguji ketajaman analisismu.</p>
+            </div>
+
+            <!-- Quiz Card Container -->
+            <div id="quizContainer" class="w-full bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-2xl relative">
+                <!-- Progress Header -->
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+                    <span id="quizCounter" class="text-xs font-bold text-cyan-400">Soal 1 dari 5</span>
+                    <span id="quizStreak" class="text-xs font-semibold text-amber-400 flex items-center gap-1">
+                        <i data-lucide="flame" class="w-3.5 h-3.5"></i> Streak: 0
+                    </span>
+                </div>
+
+                <!-- Question Text -->
+                <h3 id="questionText" class="text-lg md:text-xl font-bold text-slate-100 mb-6 leading-snug">
+                    Memuat pertanyaan...
+                </h3>
+
+                <!-- Quiz Options -->
+                <div id="optionsContainer" class="space-y-3 mb-6">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Quiz Feedback Alert Box -->
+                <div id="feedbackBox" class="p-3.5 rounded-2xl text-xs font-medium leading-relaxed hidden">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Next Question Button -->
+                <button id="nextQuestionBtn" onclick="nextQuestion()" class="w-full mt-4 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl text-sm shadow-lg transition hidden">
+                    Lanjut ke Pertanyaan Berikutnya ➜
+                </button>
+            </div>
+
+            <!-- Quiz End Summary (Hidden initially) -->
+            <div id="quizSummaryBox" class="w-full bg-slate-900/95 border border-slate-800 rounded-3xl p-8 text-center hidden shadow-2xl">
+                <div class="w-16 h-16 mx-auto bg-amber-500/20 text-amber-400 rounded-full flex items-center justify-center mb-3">
+                    <i data-lucide="award" class="w-9 h-9"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-white font-game mb-1">Kuis Selesai!</h3>
+                <p class="text-sm text-slate-400 mb-6">Kamu telah menuntaskan seluruh rangkaian materi mitosis.</p>
+                
+                <div class="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60 max-w-xs mx-auto mb-6">
+                    <div class="text-xs text-slate-400 font-medium">Nilai Akhir:</div>
+                    <div id="finalScoreVal" class="text-4xl font-black text-cyan-400 font-game mt-1">100%</div>
+                </div>
+
+                <div class="flex gap-3 justify-center">
+                    <button onclick="restartQuiz()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold rounded-xl text-sm transition">
+                        Ulangi Kuis
+                    </button>
+                    <button onclick="switchTab('lab')" class="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-xl text-sm transition shadow-lg shadow-cyan-600/30">
+                        Buka Lab Lagi
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full border-t border-slate-800/80 bg-slate-950/60 py-3 text-center text-xs text-slate-500">
+        <p>Game Edukasi Biologi SMA/SMP: Pembelahan Sel Mitosis (Profase, Metafase, Anafase, Telofase, Sitokinesis)</p>
+    </footer>
+
+    <!-- Audio Synthesis & Logic Script -->
+    <script>
+        /* ==========================================================
+           1. AUDIO SYNTHESIZER (Web Audio API - No external files)
+           ========================================================== */
+        let audioCtx = null;
+        let isAudioMuted = false;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function playSound(type) {
+            if (isAudioMuted) return;
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, now);
+                    osc.frequency.exponentialRampToValueAtTime(200, now + 0.08);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(440, now); // A4
+                    osc.frequency.setValueAtTime(554.37, now + 0.08); // C#5
+                    osc.frequency.setValueAtTime(659.25, now + 0.16); // E5
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.linearRampToValueAtTime(140, now + 0.2);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.22);
+                    osc.start(now);
+                    osc.stop(now + 0.22);
+                } else if (type === 'fanfare') {
+                    // Win melody
+                    const notes = [523.25, 659.25, 783.99, 1046.50];
+                    notes.forEach((freq, idx) => {
+                        const subOsc = ctx.createOscillator();
+                        const subGain = ctx.createGain();
+                        subOsc.connect(subGain);
+                        subGain.connect(ctx.destination);
+                        subOsc.type = 'sine';
+                        subOsc.frequency.setValueAtTime(freq, now + idx * 0.1);
+                        subGain.gain.setValueAtTime(0.12, now + idx * 0.1);
+                        subGain.gain.linearRampToValueAtTime(0.001, now + (idx * 0.1) + 0.25);
+                        subOsc.start(now + idx * 0.1);
+                        subOsc.stop(now + (idx * 0.1) + 0.25);
+                    });
+                }
+            } catch (e) {
+                console.error("Audio error: ", e);
+            }
+        }
+
+        function toggleAudio() {
+            isAudioMuted = !isAudioMuted;
+            const icon = document.getElementById('soundIcon');
+            if (isAudioMuted) {
+                icon.setAttribute('data-lucide', 'volume-x');
+            } else {
+                icon.setAttribute('data-lucide', 'volume-2');
+                playSound('click');
+            }
+            lucide.createIcons();
+        }
+
+        /* ==========================================================
+           2. SCORE MANAGEMENT
+           ========================================================== */
+        let totalScore = 0;
+        function addScore(points) {
+            totalScore += points;
+            document.getElementById('playerScore').textContent = totalScore;
+        }
+
+        /* ==========================================================
+           3. DATA TAHAPAN MITOSIS
+           ========================================================== */
+        const mitosisStages = [
+            {
+                name: "Profase",
+                mnemonic: "P (Paling Pertama)",
+                badge: "Tahap 1 dari 5",
+                desc: "Benang-benang kromatin memendek dan menebal menjadi kromosom ganda (kromatid saudara). Membran inti sel (nukleus) mulai terdisintegrasi/hilang. Sentriol mengganda dan mulai bergerak menuju kutub berlawanan menghasilkan benang gelendong (spindel).",
+                keyPoints: [
+                    "Kromatin menebal menjadi kromosom",
+                    "Nukleolus & membran inti sel melebur",
+                    "Sentriol bergerak ke kutub yang berlawanan"
+                ],
+                drawFunc: drawProphase
+            },
+            {
+                name: "Metafase",
+                mnemonic: "M (Menengah / Tengah)",
+                badge: "Tahap 2 dari 5",
+                desc: "Kromosom berjajar rapi di bidang ekuator (tengah) sel. Setiap sentromer kromosom diikat oleh benang spindel yang melekat pada kinetokor. Ini merupakan tahap paling ideal untuk menghitung dan mengamati morfologi kromosom.",
+                keyPoints: [
+                    "Kromosom berjejer di bidang ekuator (tengah)",
+                    "Benang spindel menempel kuat pada kinetokor",
+                    "Kromosom terlihat paling jelas dan tegas"
+                ],
+                drawFunc: drawMetaphase
+            },
+            {
+                name: "Anafase",
+                mnemonic: "A (Apart / Menjauh)",
+                badge: "Tahap 3 dari 5",
+                desc: "Sentromer membelah dan kromatid saudara terpisah satu sama lain. Benang-benang spindel memendek, menarik kromatid (sekarang menjadi kromosom anakan) bergerak menuju ke arah kutub sel yang berlawanan.",
+                keyPoints: [
+                    "Kromatid saudara terpisah menuju kutub berlawanan",
+                    "Benang spindel memendek menarik kinetokor",
+                    "Setiap kutub memiliki jumlah kromosom yang sama"
+                ],
+                drawFunc: drawAnaphase
+            },
+            {
+                name: "Telofase",
+                mnemonic: "T (Terakhir / Dua Inti)",
+                badge: "Tahap 4 dari 5",
+                desc: "Kromosom telah berkumpul di kutub masing-masing dan mulai mengurai kembali menjadi benang kromatin tipis. Membran nukleus terbentuk kembali di sekitar setiap kelompok materi genetik, menghasilkan dua inti sel identik.",
+                keyPoints: [
+                    "Membran inti sel mulai terbentuk kembali",
+                    "Kromosom mengurai kembali menjadi kromatin",
+                    "Mulai tampak lekukan pembelahan (cleavage furrow)"
+                ],
+                drawFunc: drawTelophase
+            },
+            {
+                name: "Sitokinesis",
+                mnemonic: "S (Selesai Membelah)",
+                badge: "Tahap Akhir",
+                desc: "Pembelahan sitoplasma sel secara tuntas. Terbentuk cincin kontraktil yang menjepit sel hingga akhirnya terputus menghasilkan dua sel anak kembar yang identik secara genetik (diploid / 2n).",
+                keyPoints: [
+                    "Sitoplasma terbagi utuh",
+                    "Terbentuk 2 sel anak identik secara genetik",
+                    "Sel anak siap memasuki siklus interfase kembali"
+                ],
+                drawFunc: drawCytokinesis
+            }
+        ];
+
+        /* ==========================================================
+           4. CELL CANVAS GRAPHICS & RENDERER
+           ========================================================== */
+        const canvas = document.getElementById('cellCanvas');
+        const ctx = canvas.getContext('2d');
+        let currentLabStage = 0;
+        let animationFrameId = null;
+        let animTick = 0;
+        let mouseX = 0;
+        let mouseY = 0;
+        let isHovering = false;
+
+        // Resize Canvas dynamically based on screen
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            // Retain coordinate space 460x340 for stable physics/drawings
+            canvas.width = 460;
+            canvas.height = 340;
+        }
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+            mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+            isHovering = true;
+        });
+        canvas.addEventListener('mouseleave', () => isHovering = false);
+        canvas.addEventListener('click', () => {
+            playSound('click');
+        });
+
+        function renderLoop() {
+            animTick += 0.03;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Stage
+            if (mitosisStages[currentLabStage] && mitosisStages[currentLabStage].drawFunc) {
+                mitosisStages[currentLabStage].drawFunc(ctx, canvas.width, canvas.height, animTick);
+            }
+
+            animationFrameId = requestAnimationFrame(renderLoop);
+        }
+
+        // Helper: Draw chromosome pair (X shape or sister chromatids)
+        function drawChromosome(ctx, x, y, angle, color1 = '#ec4899', color2 = '#38bdf8', scale = 1) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            ctx.scale(scale, scale);
+
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+
+            // Left arm
+            ctx.strokeStyle = color1;
+            ctx.beginPath();
+            ctx.moveTo(-12, -18);
+            ctx.lineTo(0, 0);
+            ctx.lineTo(-12, 18);
+            ctx.stroke();
+
+            // Right arm
+            ctx.strokeStyle = color2;
+            ctx.beginPath();
+            ctx.moveTo(12, -18);
+            ctx.lineTo(0, 0);
+            ctx.lineTo(12, 18);
+            ctx.stroke();
+
+            // Centromere / Kinetochore dot
+            ctx.fillStyle = '#facc15';
+            ctx.beginPath();
+            ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        // Helper: Draw V-shape chromatid pulled in Anaphase
+        function drawVChromatid(ctx, x, y, angle, color = '#ec4899', scale = 1) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            ctx.scale(scale, scale);
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+
+            ctx.beginPath();
+            ctx.moveTo(12, -12);
+            ctx.lineTo(0, 0);
+            ctx.lineTo(12, 12);
+            ctx.stroke();
+
+            // Kinetochore
+            ctx.fillStyle = '#facc15';
+            ctx.beginPath();
+            ctx.arc(0, 0, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        // Helper: Draw Centrosome/Centriole Star
+        function drawCentrosome(ctx, x, y) {
+            ctx.save();
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.arc(x, y, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Aster rays
+            ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+            ctx.lineWidth = 1.5;
+            for (let i = 0; i < 8; i++) {
+                const a = (i * Math.PI) / 4;
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + Math.cos(a) * 16, y + Math.sin(a) * 16);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        // --- DRAWING STAGES ---
+
+        // 1. PROPHASE
+        function drawProphase(ctx, w, h, t) {
+            const cx = w / 2;
+            const cy = h / 2;
+
+            // Outer Cell Membrane
+            ctx.save();
+            ctx.fillStyle = 'rgba(30, 41, 59, 0.7)';
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 140, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Dissolving Nuclear Membrane (Dashed circle)
+            ctx.strokeStyle = 'rgba(244, 114, 182, ' + (0.4 + 0.3 * Math.sin(t * 2)) + ')';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([8, 6]);
+            ctx.beginPath();
+            ctx.arc(cx, cy, 80, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Centrosomes migrating
+            const poleOffset = 70 + Math.sin(t) * 5;
+            drawCentrosome(ctx, cx - poleOffset, cy - 60);
+            drawCentrosome(ctx, cx + poleOffset, cy + 60);
+
+            // Spindle threads starting
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(cx - poleOffset, cy - 60);
+            ctx.lineTo(cx, cy - 30);
+            ctx.moveTo(cx + poleOffset, cy + 60);
+            ctx.lineTo(cx, cy + 30);
+            ctx.stroke();
+
+            // Chromosomes condensing inside nucleus
+            drawChromosome(ctx, cx - 25 + Math.sin(t) * 3, cy - 25, 0.3 + Math.sin(t) * 0.1, '#ec4899', '#38bdf8', 1);
+            drawChromosome(ctx, cx + 30, cy - 10 + Math.cos(t) * 3, -0.4, '#a855f7', '#10b981', 0.9);
+            drawChromosome(ctx, cx - 10, cy + 30, 0.7 + Math.sin(t) * 0.1, '#f43f5e', '#06b6d4', 1.05);
+            drawChromosome(ctx, cx + 25, cy + 35, -0.8, '#3b82f6', '#ec4899', 0.85);
+
+            // Labels
+            drawCanvasLabel(ctx, cx, cy - 100, "Membran Inti Melebur", "#f472b6");
+            drawCanvasLabel(ctx, cx - poleOffset, cy - 80, "Sentriol", "#f59e0b");
+            ctx.restore();
+        }
+
+        // 2. METAPHASE
+        function drawMetaphase(ctx, w, h, t) {
+            const cx = w / 2;
+            const cy = h / 2;
+
+            // Outer Membrane
+            ctx.save();
+            ctx.fillStyle = 'rgba(30, 41, 59, 0.7)';
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 140, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Two centrosomes at opposite poles
+            const leftPoleX = cx - 110;
+            const rightPoleX = cx + 110;
+            drawCentrosome(ctx, leftPoleX, cy);
+            drawCentrosome(ctx, rightPoleX, cy);
+
+            // Equator Line (Metaphasic plate guide)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - 120);
+            ctx.lineTo(cx, cy + 120);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Chromosomes arrayed at the equator (vertically aligned)
+            const yPositions = [-65, -20, 25, 70];
+            const colors = [
+                ['#ec4899', '#38bdf8'],
+                ['#a855f7', '#10b981'],
+                ['#f43f5e', '#06b6d4'],
+                ['#3b82f6', '#fbbf24']
+            ];
+
+            yPositions.forEach((yPos, idx) => {
+                const chrY = cy + yPos + Math.sin(t * 1.5 + idx) * 2;
+                
+                // Spindle fibers from left pole to kinetochore
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(leftPoleX, cy);
+                ctx.lineTo(cx, chrY);
+                ctx.stroke();
+
+                // Spindle fibers from right pole to kinetochore
+                ctx.beginPath();
+                ctx.moveTo(rightPoleX, cy);
+                ctx.lineTo(cx, chrY);
+                ctx.stroke();
+
+                // Chromosome aligned perpendicular to spindle
+                drawChromosome(ctx, cx, chrY, 0, colors[idx][0], colors[idx][1], 0.95);
+            });
+
+            drawCanvasLabel(ctx, cx, cy - 125, "Bidang Ekuator (Tengah)", "#38bdf8");
+            drawCanvasLabel(ctx, leftPoleX, cy - 25, "Kutub Barat", "#f59e0b");
+            drawCanvasLabel(ctx, rightPoleX, cy - 25, "Kutub Timur", "#f59e0b");
+            ctx.restore();
+        }
+
+        // 3. ANAPHASE
+        function drawAnaphase(ctx, w, h, t) {
+            const cx = w / 2;
+            const cy = h / 2;
+
+            // Slightly elongated cell oval
+            ctx.save();
+            ctx.fillStyle = 'rgba(30, 41, 59, 0.7)';
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, 160, 130, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            const leftPoleX = cx - 130;
+            const rightPoleX = cx + 130;
+            drawCentrosome(ctx, leftPoleX, cy);
+            drawCentrosome(ctx, rightPoleX, cy);
+
+            // Separation distance animated slightly
+            const travel = 48 + Math.sin(t * 2) * 4;
+            const yPositions = [-55, -18, 18, 55];
+            const colors = ['#ec4899', '#a855f7', '#f43f5e', '#3b82f6'];
+
+            yPositions.forEach((yPos, i) => {
+                const targetY = cy + yPos;
+
+                // Left Chromatid (pulled left)
+                const leftX = cx - travel;
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(leftPoleX, cy);
+                ctx.lineTo(leftX, targetY);
+                ctx.stroke();
+                drawVChromatid(ctx, leftX, targetY, 0, colors[i], 0.9);
+
+                // Right Chromatid (pulled right)
+                const rightX = cx + travel;
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+                ctx.beginPath();
+                ctx.moveTo(rightPoleX, cy);
+                ctx.lineTo(rightX, targetY);
+                ctx.stroke();
+                drawVChromatid(ctx, rightX, targetY, Math.PI, colors[i], 0.9);
+            });
+
+            // Tension arrows
+            drawCanvasLabel(ctx, cx - travel, cy - 85, "Kromatid ditarik ◄", "#ec4899");
+            drawCanvasLabel(ctx, cx + travel, cy - 85, "► Kromatid ditarik", "#38bdf8");
+            ctx.restore();
+        }
+
+        // 4. TELOPHASE
+        function drawTelophase(ctx, w, h, t) {
+            const cx = w / 2;
+            const cy = h / 2;
+
+            // Peanut / Dumbbell shaped pinched cell membrane (Cleavage Furrow)
+            ctx.save();
+            ctx.fillStyle = 'rgba(30, 41, 59, 0.7)';
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 4;
+
+            ctx.beginPath();
+            // Left lobe
+            ctx.arc(cx - 65, cy, 75, Math.PI * 0.35, Math.PI * 1.65, false);
+            // Top pinch
+            ctx.quadraticCurveTo(cx, cy - 15, cx + 65 - 75 * Math.cos(Math.PI * 0.35), cy - 75 * Math.sin(Math.PI * 0.35));
+            // Right lobe
+            ctx.arc(cx + 65, cy, 75, -Math.PI * 0.65, Math.PI * 0.65, false);
+            // Bottom pinch
+            ctx.quadraticCurveTo(cx, cy + 15, cx - 65 + 75 * Math.cos(Math.PI * 0.35), cy + 75 * Math.sin(Math.PI * 0.35));
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Two reforming nuclei (dashed circles)
+            const leftNucX = cx - 65;
+            const rightNucX = cx + 65;
+
+            ctx.strokeStyle = 'rgba(244, 114, 182, 0.7)';
+            ctx.lineWidth = 2.5;
+            ctx.setLineDash([5, 4]);
+
+            // Left Nucleus
+            ctx.beginPath();
+            ctx.arc(leftNucX, cy, 45, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Right Nucleus
+            ctx.beginPath();
+            ctx.arc(rightNucX, cy, 45, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Relaxing chromatin strands inside each nucleus
+            drawChromatinMass(ctx, leftNucX, cy, t);
+            drawChromatinMass(ctx, rightNucX, cy, t + 1);
+
+            // Centrosomes at outside of each nucleus
+            drawCentrosome(ctx, leftNucX - 52, cy);
+            drawCentrosome(ctx, rightNucX + 52, cy);
+
+            drawCanvasLabel(ctx, cx, cy - 40, "Lekukan Pembelahan", "#38bdf8");
+            drawCanvasLabel(ctx, leftNucX, cy + 60, "Inti Baru 1", "#f472b6");
+            drawCanvasLabel(ctx, rightNucX, cy + 60, "Inti Baru 2", "#f472b6");
+            ctx.restore();
+        }
+
+        // 5. CYTOKINESIS
+        function drawCytokinesis(ctx, w, h, t) {
+            const cx = w / 2;
+            const cy = h / 2;
+
+            // Two completely separate daughter cells
+            const cell1X = cx - 85;
+            const cell2X = cx + 85;
+            const radius = 68;
+
+            ctx.save();
+            ctx.fillStyle = 'rgba(30, 41, 59, 0.7)';
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 4;
+
+            // Cell 1
+            ctx.beginPath();
+            ctx.arc(cell1X, cy, radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Cell 2
+            ctx.beginPath();
+            ctx.arc(cell2X, cy, radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Fully formed nuclei
+            ctx.strokeStyle = '#f472b6';
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
+            ctx.arc(cell1X, cy, 34, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(cell2X, cy, 34, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Decondensed chromatin & nucleolus in both cells
+            drawChromatinMass(ctx, cell1X, cy, t);
+            drawChromatinMass(ctx, cell2X, cy, t + 2);
+
+            // Nucleolus core
+            ctx.fillStyle = '#ec4899';
+            ctx.beginPath();
+            ctx.arc(cell1X + 8, cy - 6, 6, 0, Math.PI * 2);
+            ctx.arc(cell2X + 8, cy - 6, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Labels
+            drawCanvasLabel(ctx, cell1X, cy + 85, "Sel Anak 1 (2n)", "#10b981");
+            drawCanvasLabel(ctx, cell2X, cy + 85, "Sel Anak 2 (2n)", "#10b981");
+            drawCanvasLabel(ctx, cx, cy - 100, "2 Sel Anak Kembar Identik!", "#facc15");
+            ctx.restore();
+        }
+
+        // Helper: Draw decondensing chromatin tangle
+        function drawChromatinMass(ctx, x, y, t) {
+            ctx.save();
+            ctx.strokeStyle = '#c084fc';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let i = 0; i < 7; i++) {
+                const angle = i * 0.9 + t * 0.2;
+                const dist = 12 + Math.sin(t + i) * 6;
+                const px = x + Math.cos(angle) * dist;
+                const py = y + Math.sin(angle) * dist;
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // Label helper on canvas
+        function drawCanvasLabel(ctx, x, y, text, color = '#ffffff') {
+            ctx.save();
+            ctx.font = 'bold 11px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const metrics = ctx.measureText(text);
+            const bgW = metrics.width + 12;
+            const bgH = 18;
+
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.roundRect(x - bgW / 2, y - bgH / 2, bgW, bgH, 5);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = color;
+            ctx.fillText(text, x, y + 1);
+            ctx.restore();
+        }
+
+        function selectLabStage(idx) {
+            currentLabStage = idx;
+            playSound('click');
+            updateLabUI();
+        }
+
+        function stepLabStage(dir) {
+            currentLabStage = (currentLabStage + dir + mitosisStages.length) % mitosisStages.length;
+            playSound('click');
+            updateLabUI();
+        }
+
+        function updateLabUI() {
+            const stage = mitosisStages[currentLabStage];
+            document.getElementById('labTitle').textContent = stage.name;
+            document.getElementById('labBadge').textContent = stage.badge;
+            document.getElementById('labMnemonic').textContent = stage.mnemonic;
+            document.getElementById('labDesc').textContent = stage.desc;
+
+            const list = document.getElementById('labKeyPoints');
+            list.innerHTML = stage.keyPoints.map(p => `<li>${p}</li>`).join('');
+
+            // Highlight buttons
+            document.querySelectorAll('.stage-btn').forEach((btn, i) => {
+                if (i === currentLabStage) {
+                    btn.className = "stage-btn px-4 py-2 rounded-xl text-sm font-semibold border transition active:scale-95 bg-cyan-600 text-white border-cyan-400 shadow-lg shadow-cyan-600/30";
+                } else {
+                    btn.className = "stage-btn px-4 py-2 rounded-xl text-sm font-semibold border transition active:scale-95 bg-slate-800 text-slate-300 border-slate-700 hover:border-slate-500";
+                }
+            });
+        }
+
+        /* ==========================================================
+           5. MINI-GAME: URUTKAN TAHAPAN (TIMELINE PUZZLE)
+           ========================================================== */
+        const baseStages = [
+            { id: 'pro', name: 'Profase', hint: 'Kromosom memadat, membran inti larut', icon: 'circle-dot' },
+            { id: 'meta', name: 'Metafase', hint: 'Kromosom berjejer di garis tengah (ekuator)', icon: 'align-justify' },
+            { id: 'ana', name: 'Anafase', hint: 'Kromatid saudara berpisah ke kutub', icon: 'split' },
+            { id: 'telo', name: 'Telofase', hint: 'Dua membran inti terbentuk kembali', icon: 'copy' }
+        ];
+
+        let sortSlots = [null, null, null, null];
+        let availableCards = [];
+
+        function initSortGame() {
+            sortSlots = [null, null, null, null];
+            availableCards = [...baseStages].sort(() => Math.random() - 0.5);
+            document.getElementById('sortSuccessBox').classList.add('hidden');
+            renderSortSlots();
+            renderSortCards();
+        }
+
+        function resetSortGame() {
+            playSound('click');
+            initSortGame();
+        }
+
+        function renderSortSlots() {
+            const container = document.getElementById('slotsContainer');
+            container.innerHTML = '';
+
+            sortSlots.forEach((item, index) => {
+                const slotDiv = document.createElement('div');
+                slotDiv.className = `p-3 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center min-h-[110px] text-center transition ${
+                    item ? 'bg-cyan-950/40 border-cyan-500/60 shadow-lg' : 'bg-slate-800/40 border-slate-700/60'
+                }`;
+
+                if (item) {
+                    slotDiv.innerHTML = `
+                        <span class="text-[10px] font-bold tracking-wider text-cyan-400 uppercase mb-1">Tahap ke-${index + 1}</span>
+                        <div class="font-bold text-white text-base font-game">${item.name}</div>
+                        <p class="text-[11px] text-slate-300 line-clamp-2 mt-1">${item.hint}</p>
+                        <button onclick="removeSortItem(${index})" class="mt-2 text-[10px] text-red-400 hover:text-red-300 underline font-medium">Lepas</button>
+                    `;
+                } else {
+                    slotDiv.innerHTML = `
+                        <span class="text-xs font-semibold text-slate-500 uppercase">Slot #${index + 1}</span>
+                        <p class="text-xs text-slate-600 mt-1">Kosong</p>
+                    `;
+                }
+
+                container.appendChild(slotDiv);
+            });
+        }
+
+        function renderSortCards() {
+            const container = document.getElementById('cardsPool');
+            container.innerHTML = '';
+
+            availableCards.forEach((card, index) => {
+                const cardBtn = document.createElement('button');
+                cardBtn.className = "bg-slate-800 hover:bg-slate-750 p-3.5 rounded-2xl border border-slate-700 hover:border-cyan-500 text-left transition transform hover:-translate-y-1 active:scale-95 shadow-lg group";
+                cardBtn.onclick = () => assignCardToSlot(card);
+
+                cardBtn.innerHTML = `
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="font-bold text-slate-100 group-hover:text-cyan-300 font-game">${card.name}</span>
+                        <i data-lucide="plus" class="w-4 h-4 text-cyan-400"></i>
+                    </div>
+                    <p class="text-xs text-slate-400 leading-snug">${card.hint}</p>
+                `;
+                container.appendChild(cardBtn);
+            });
+            lucide.createIcons();
+        }
+
+        function assignCardToSlot(card) {
+            const emptyIdx = sortSlots.findIndex(slot => slot === null);
+            if (emptyIdx === -1) return; // Full
+
+            playSound('click');
+            sortSlots[emptyIdx] = card;
+            availableCards = availableCards.filter(c => c.id !== card.id);
+
+            renderSortSlots();
+            renderSortCards();
+            checkSortWin();
+        }
+
+        function removeSortItem(slotIdx) {
+            const item = sortSlots[slotIdx];
+            if (!item) return;
+
+            playSound('click');
+            sortSlots[slotIdx] = null;
+            availableCards.push(item);
+
+            renderSortSlots();
+            renderSortCards();
+        }
+
+        function checkSortWin() {
+            const isFull = sortSlots.every(s => s !== null);
+            if (!isFull) return;
+
+            const isCorrect = 
+                sortSlots[0].id === 'pro' &&
+                sortSlots[1].id === 'meta' &&
+                sortSlots[2].id === 'ana' &&
+                sortSlots[3].id === 'telo';
+
+            if (isCorrect) {
+                playSound('correct');
+                playSound('fanfare');
+                addScore(100);
+                document.getElementById('sortSuccessBox').classList.remove('hidden');
+            } else {
+                playSound('wrong');
+                // Brief visual feedback
+                const container = document.getElementById('slotsContainer');
+                container.classList.add('ring-2', 'ring-rose-500');
+                setTimeout(() => {
+                    container.classList.remove('ring-2', 'ring-rose-500');
+                }, 1000);
+            }
+        }
+
+        /* ==========================================================
+           6. MINI-GAME: TANTANGAN KUIS BIOLOGI (5 SOAL)
+           ========================================================== */
+        const quizBank = [
+            {
+                q: "Pada tahap mitosis manakah kromosom berjejer tepat di bidang pembelahan (ekuator sel)?",
+                options: [
+                    "Profase",
+                    "Metafase",
+                    "Anafase",
+                    "Telofase"
+                ],
+                correct: 1,
+                explanation: "Metafase ditandai dengan bersejajarnya kromosom di bidang ekuator (tengah) sel sehingga sangat mudah dihitung."
+            },
+            {
+                q: "Peristiwa pemisahan kromatid saudara menuju ke kutub yang berlawanan terjadi pada tahap...",
+                options: [
+                    "Anafase",
+                    "Profase",
+                    "Interfase",
+                    "Telofase"
+                ],
+                correct: 0,
+                explanation: "Anafase (A = Apart/Menjauh) terjadi ketika sentromer membelah dan benang spindel menarik kromatid ke kutub berlawanan."
+            },
+            {
+                q: "Bagian benang spindel menempel pada bagian kromosom yang dinamakan...",
+                options: [
+                    "Sentrosom",
+                    "Kinetokor",
+                    "Telomer",
+                    "Kromatin"
+                ],
+                correct: 1,
+                explanation: "Kinetokor adalah struktur protein spesifik pada sentromer tempat melekatnya mikrotubulus benang spindel."
+            },
+            {
+                q: "Ciri khas yang menandai berakhirnya tahap telofase dan mulainya pembelahan sitoplasma adalah...",
+                options: [
+                    "Sitokinesis",
+                    "Replikasi DNA",
+                    "Pembentukan sentriol baru",
+                    "Kondensasi kromosom"
+                ],
+                correct: 0,
+                explanation: "Sitokinesis adalah proses pembagian sitoplasma dan organel untuk menghasilkan dua sel anakan baru yang terpisah sempurna."
+            },
+            {
+                q: "Jika sel induk memiliki kromosom 2n (diploid) sebanyak 46 kromosom, berapakah jumlah kromosom pada masing-masing sel anakan hasil mitosis?",
+                options: [
+                    "23 kromosom (haploid)",
+                    "46 kromosom (diploid)",
+                    "92 kromosom (tetraploid)",
+                    "12 kromosom"
+                ],
+                correct: 1,
+                explanation: "Mitosis menghasilkan dua sel anak dengan jumlah kromosom identik dengan sel induknya, yaitu tetap 2n (46 kromosom diploid)."
+            }
+        ];
+
+        let currentQuestionIdx = 0;
+        let quizStreakCount = 0;
+        let quizCorrectAnswers = 0;
+        let isQuestionAnswered = false;
+
+        function loadQuestion() {
+            isQuestionAnswered = false;
+            const q = quizBank[currentQuestionIdx];
+            document.getElementById('quizCounter').textContent = `Soal ${currentQuestionIdx + 1} dari ${quizBank.length}`;
+            document.getElementById('quizStreak').innerHTML = `<i data-lucide="flame" class="w-3.5 h-3.5"></i> Streak: ${quizStreakCount}`;
+            document.getElementById('questionText').textContent = q.q;
+
+            const feedback = document.getElementById('feedbackBox');
+            feedback.className = "p-3.5 rounded-2xl text-xs font-medium leading-relaxed hidden";
+            feedback.innerHTML = "";
+
+            document.getElementById('nextQuestionBtn').classList.add('hidden');
+
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "quiz-opt w-full text-left p-3.5 rounded-2xl bg-slate-800 hover:bg-slate-750 border border-slate-700/80 hover:border-cyan-500/60 transition text-sm font-medium flex items-center justify-between";
+                btn.onclick = () => handleAnswer(idx);
+                btn.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="w-6 h-6 rounded-lg bg-slate-700/80 flex items-center justify-center text-xs font-bold text-slate-300">${String.fromCharCode(65 + idx)}</span>
+                        <span>${opt}</span>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-slate-500"></i>
+                `;
+                optionsContainer.appendChild(btn);
+            });
+
+            lucide.createIcons();
+        }
+
+        function handleAnswer(selectedIdx) {
+            if (isQuestionAnswered) return;
+            isQuestionAnswered = true;
+
+            const q = quizBank[currentQuestionIdx];
+            const buttons = document.querySelectorAll('.quiz-opt');
+            const feedback = document.getElementById('feedbackBox');
+
+            if (selectedIdx === q.correct) {
+                playSound('correct');
+                quizStreakCount++;
+                quizCorrectAnswers++;
+                addScore(50 + quizStreakCount * 10);
+
+                buttons[selectedIdx].classList.add('bg-emerald-950/80', 'border-emerald-500', 'text-emerald-300');
+                feedback.className = "p-3.5 rounded-2xl text-xs font-medium leading-relaxed bg-emerald-950/60 border border-emerald-500/40 text-emerald-200 block";
+                feedback.innerHTML = `<b>Benar sekali!</b> ${q.explanation}`;
+            } else {
+                playSound('wrong');
+                quizStreakCount = 0;
+
+                buttons[selectedIdx].classList.add('bg-rose-950/80', 'border-rose-500', 'text-rose-300');
+                buttons[q.correct].classList.add('bg-emerald-950/80', 'border-emerald-500', 'text-emerald-300');
+                feedback.className = "p-3.5 rounded-2xl text-xs font-medium leading-relaxed bg-rose-950/60 border border-rose-500/40 text-rose-200 block";
+                feedback.innerHTML = `<b>Kurang tepat.</b> ${q.explanation}`;
+            }
+
+            document.getElementById('quizStreak').innerHTML = `<i data-lucide="flame" class="w-3.5 h-3.5"></i> Streak: ${quizStreakCount}`;
+            document.getElementById('nextQuestionBtn').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function nextQuestion() {
+            playSound('click');
+            currentQuestionIdx++;
+            if (currentQuestionIdx < quizBank.length) {
+                loadQuestion();
+            } else {
+                showQuizSummary();
+            }
+        }
+
+        function showQuizSummary() {
+            playSound('fanfare');
+            document.getElementById('quizContainer').classList.add('hidden');
+            const summary = document.getElementById('quizSummaryBox');
+            summary.classList.remove('hidden');
+
+            const percent = Math.round((quizCorrectAnswers / quizBank.length) * 100);
+            document.getElementById('finalScoreVal').textContent = `${percent}%`;
+        }
+
+        function restartQuiz() {
+            playSound('click');
+            currentQuestionIdx = 0;
+            quizStreakCount = 0;
+            quizCorrectAnswers = 0;
+            document.getElementById('quizContainer').classList.remove('hidden');
+            document.getElementById('quizSummaryBox').classList.add('hidden');
+            loadQuestion();
+        }
+
+        /* ==========================================================
+           7. TAB SWITCHING
+           ========================================================== */
+        function switchTab(tabId) {
+            playSound('click');
+
+            // Hide all views
+            document.querySelectorAll('.tab-view').forEach(view => {
+                view.classList.add('hidden');
+                view.classList.remove('flex');
+            });
+
+            // Reset tab button states
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn flex-1 py-2.5 px-3 rounded-xl font-medium text-sm transition flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200";
+            });
+
+            // Activate chosen view
+            const activeView = document.getElementById(`view-${tabId}`);
+            activeView.classList.remove('hidden');
+            activeView.classList.add('flex');
+
+            const activeBtn = document.getElementById(`tabBtn-${tabId}`);
+            activeBtn.className = "tab-btn flex-1 py-2.5 px-3 rounded-xl font-medium text-sm transition flex items-center justify-center gap-2 bg-cyan-600 text-white shadow-md";
+
+            if (tabId === 'sort') {
+                initSortGame();
+            } else if (tabId === 'quiz') {
+                if (currentQuestionIdx === 0 && quizCorrectAnswers === 0) {
+                    loadQuestion();
+                }
+            }
+        }
+
+        /* ==========================================================
+           8. INIT ON LOAD
+           ========================================================== */
+        window.onload = function () {
+            lucide.createIcons();
+            resizeCanvas();
+            updateLabUI();
+            renderLoop();
+            initSortGame();
+            loadQuestion();
+        };
+
+        window.addEventListener('resize', resizeCanvas);
+    </script>
+</body>
+</html>
